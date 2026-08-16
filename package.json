@@ -20,7 +20,7 @@
   "dependencies": {
     "@mdi/font": "^7.4.47",
     "@xmcl/core": "2.15.1",
-    "@xmcl/installer": "6.3.1",
+    "@xmcl/installer": "6.1.2",
     "electron-store": "^10.1.0",
     "skinview3d": "^3.4.1",
     "three": "^0.179.1",
