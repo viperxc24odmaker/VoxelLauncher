@@ -2,6 +2,7 @@
   "name": "voxel-launcher",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "VoxelLauncher - a full-featured Minecraft Java Edition launcher.",
   "main": "dist-electron/main.js",
   "author": "viperxc24odmaker",
@@ -50,15 +51,8 @@
     "asar": true,
     "files": ["dist/**", "dist-electron/**", "package.json"],
     "extraResources": [{ "from": "native", "to": "native" }],
-    "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }]
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "perMachine": false,
-      "deleteAppDataOnUninstall": false
-    },
+    "win": { "target": [{ "target": "nsis", "arch": ["x64"] }] },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "perMachine": false, "deleteAppDataOnUninstall": false },
     "artifactName": "VoxelLauncher-${version}-${arch}.exe"
   }
 }
