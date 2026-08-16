@@ -8,7 +8,9 @@
   "author": "viperxc24odmaker",
   "license": "MIT",
   "packageManager": "pnpm@10.15.0",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "vite",
     "typecheck": "vue-tsc --noEmit && tsc -p tsconfig.electron.json --noEmit",
@@ -30,6 +32,7 @@
     "vuetify": "^3.8.11"
   },
   "devDependencies": {
+    "@types/node": "^26.2.0",
     "@vitejs/plugin-vue": "^6.0.1",
     "electron": "^37.3.1",
     "electron-builder": "^26.0.12",
@@ -41,10 +44,33 @@
     "appId": "com.v24.voxellauncher",
     "productName": "VoxelLauncher",
     "asar": true,
-    "files": ["dist/**", "dist-electron/**", "package.json"],
-    "extraResources": [{ "from": "native", "to": "native" }],
-    "win": { "target": [{ "target": "nsis", "arch": ["x64"] }] },
-    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "perMachine": false, "deleteAppDataOnUninstall": false },
+    "files": [
+      "dist/**",
+      "dist-electron/**",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "native",
+        "to": "native"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "deleteAppDataOnUninstall": false
+    },
     "artifactName": "VoxelLauncher-${version}-${arch}.exe"
   }
 }

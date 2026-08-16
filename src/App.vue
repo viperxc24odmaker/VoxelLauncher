@@ -1,19 +1,85 @@
+<script lang="ts">
 import { defineComponent, ref, onMounted } from 'vue'
-import 'vuetify/styles'; import '@mdi/font/css/materialdesignicons.css'; import { createVuetify } from 'vuetify'
-import { VApp,VMain,VBtn,VCard,VCardText,VNavigationDrawer,VList,VListItem,VListItemTitle,VTextField,VSelect,VProgressLinear,VToolbar,VSpacer,VIcon,VChip,VSwitch } from 'vuetify/components'
-const vuetify=createVuetify({components:{VApp,VMain,VBtn,VCard,VCardText,VNavigationDrawer,VList,VListItem,VListItemTitle,VTextField,VSelect,VProgressLinear,VToolbar,VSpacer,VIcon,VChip,VSwitch},theme:{defaultTheme:'dark',themes:{dark:{colors:{background:'#09090b',surface:'#111116',primary:'#8b5cf6'}}}}})
-declare global{interface Window{voxel:any}}
-export const App=defineComponent({setup(){
- const tab=ref('Home'),versions=ref<any[]>([]),instances=ref<any[]>([]),busy=ref(false),progress=ref(0),logs=ref<string[]>([]),mods=ref<any[]>([]),query=ref('')
- const form=ref({name:'Survival',version:'',loader:'Vanilla',memory:4096,javaPath:'',jvmArgs:''}),settings=ref<any>({memory:4096,jvmArgs:'',closeOnPlay:false,gameDirectory:''})
- const nav=['Home','Play','Mods','Accounts','Settings']; const addLog=(s:string)=>logs.value.unshift(`${new Date().toLocaleTimeString()} ${s}`)
- const load=async()=>{settings.value=await window.voxel.settings.get();versions.value=await window.voxel.minecraft.versions();instances.value=await window.voxel.instances.list();const j=await window.voxel.java.detect();form.value.javaPath=j[0]??'';form.value.version=versions.value.find(v=>v.type==='release')?.id??versions.value[0]?.id??'';window.voxel.minecraft.onLog((x:string)=>x.split(/\r?\n/).filter(Boolean).forEach(addLog))}
- const create=async()=>{const id=crypto.randomUUID();const gameDirectory=`${settings.value.gameDirectory}/instances/${id}`;const v={id,...form.value,gameDirectory};await window.voxel.instances.save(v);instances.value=await window.voxel.instances.list();addLog(`Created ${v.name}`)}
- const install=async()=>{busy.value=true;progress.value=8;addLog(`Installing ${form.value.loader} ${form.value.version}`);try{const r=await window.voxel.minecraft.install({version:form.value.version,loader:form.value.loader,gameDirectory:settings.value.gameDirectory,javaPath:form.value.javaPath});progress.value=100;addLog(`Installed ${r.version}`)}catch(e:any){addLog(`Install error: ${e.message}`)}finally{busy.value=false}}
- const play=async(i:any=instances.value[0])=>{if(!i){tab.value='Play';return}busy.value=true;addLog(`Launching ${i.name}`);try{const r=await window.voxel.minecraft.launch({version:i.version,gameDirectory:i.gameDirectory,javaPath:i.javaPath||form.value.javaPath,username:'VoxelPlayer',memory:i.memory,jvmArgs:i.jvmArgs});addLog(`Minecraft started, PID ${r.pid}`)}catch(e:any){addLog(`Launch error: ${e.message}`)}finally{busy.value=false}}
- const searchMods=async()=>{mods.value=await window.voxel.mods.search(query.value,form.value.version,form.value.loader);addLog(`Found ${mods.value.length} Modrinth projects`)}
- const installMod=async(m:any)=>{try{const r=await window.voxel.mods.install(m.id,instances.value[0]?.gameDirectory||settings.value.gameDirectory,form.value.version,form.value.loader);addLog(`Installed ${r.filename}`)}catch(e:any){addLog(`Mod install error: ${e.message}`)}}
- const saveSettings=async()=>{await window.voxel.settings.set('memory',settings.value.memory);await window.voxel.settings.set('jvmArgs',settings.value.jvmArgs);await window.voxel.settings.set('closeOnPlay',settings.value.closeOnPlay);addLog('Settings saved')}
- onMounted(load); return{tab,nav,versions,instances,busy,progress,logs,mods,query,form,settings,create,install,play,searchMods,installMod,saveSettings}
-},template:`<v-app><v-toolbar density="compact" color="transparent" class="titlebar"><v-toolbar-title>◆ VoxelLauncher</v-toolbar-title><v-spacer/><v-btn icon="mdi-minus" @click="window.voxel.window.minimize()"/><v-btn icon="mdi-checkbox-blank-outline" @click="window.voxel.window.maximize()"/><v-btn icon="mdi-close" @click="window.voxel.window.close()"/></v-toolbar><v-navigation-drawer permanent width="220" color="#0d0d12"><div class="brand">VOXEL<span>LAUNCHER</span></div><v-list nav><v-list-item v-for="item in nav" :key="item" :active="tab===item" @click="tab=item" rounded="lg"><template #prepend><v-icon :icon="item==='Home'?'mdi-home':item==='Play'?'mdi-gamepad-variant':item==='Mods'?'mdi-puzzle':item==='Accounts'?'mdi-account-multiple':'mdi-cog'"/></template><v-list-item-title>{{item}}</v-list-item-title></v-list-item></v-list></v-navigation-drawer><v-main class="main"><div class="orb orb-a"/><div class="orb orb-b"/><div class="content"><section v-if="tab==='Home'"><h1>Welcome back.</h1><p class="muted">Minecraft Java Edition, managed from one place.</p><v-card class="hero" rounded="xl"><v-card-text><div class="hero-title">Ready to play?</div><div class="hero-sub">{{instances.length}} instance(s) available.</div><v-btn color="primary" size="large" :loading="busy" @click="play()">Play Minecraft</v-btn></v-card-text></v-card><v-card rounded="xl"><v-card-text><h2>Instances</h2><div class="grid"><div v-for="i in instances" :key="i.id" class="instance"><div><strong>{{i.name}}</strong><div class="muted">{{i.version}} · {{i.loader}} · {{Math.round(i.memory/1024)}} GB</div></div><v-btn icon="mdi-play" variant="tonal" @click="play(i)"/></div></div></v-card-text></v-card></section><section v-else-if="tab==='Play'"><h1>Instances</h1><v-card rounded="xl"><v-card-text><div class="grid two"><v-text-field v-model="form.name" label="Instance name"/><v-select v-model="form.loader" :items="['Vanilla','Fabric','Forge','NeoForge','Quilt']" label="Loader"/><v-select v-model="form.version" :items="versions.filter(v=>v.type==='release').map(v=>v.id)" label="Minecraft version"/><v-text-field v-model.number="form.memory" type="number" label="Memory (MB)"/><v-text-field v-model="form.javaPath" label="Java executable"/><v-text-field v-model="form.jvmArgs" label="JVM arguments"/></div><v-btn color="primary" @click="create">Create instance</v-btn><v-btn class="ml-2" variant="tonal" :loading="busy" @click="install">Install selected version</v-btn><v-progress-linear v-if="busy" :model-value="progress" class="mt-4" rounded/></v-card-text></v-card></section><section v-else-if="tab==='Mods'"><h1>Mods</h1><v-card rounded="xl"><v-card-text><div class="grid two"><v-text-field v-model="query" label="Search Modrinth" @keyup.enter="searchMods"/><v-btn color="primary" @click="searchMods">Search</v-btn></div><div class="grid"><div v-for="m in mods" :key="m.id" class="instance"><div><strong>{{m.title}}</strong><div class="muted">{{m.downloads.toLocaleString()}} downloads · {{m.description}}</div></div><v-btn variant="tonal" @click="installMod(m)">Install</v-btn></div></div></v-card-text></v-card></section><section v-else-if="tab==='Accounts'"><h1>Accounts</h1><v-card rounded="xl"><v-card-text><h2>Offline profile</h2><p class="muted">VoxelPlayer is available immediately for offline/local testing. Online Microsoft credentials stay out of the renderer and can be added through the secure auth layer later.</p><v-chip color="primary">VoxelPlayer</v-chip></v-card-text></v-card></section><section v-else><h1>Settings</h1><v-card rounded="xl"><v-card-text><v-text-field v-model.number="settings.memory" type="number" label="Default memory (MB)"/><v-text-field v-model="settings.jvmArgs" label="Default JVM arguments"/><v-switch v-model="settings.closeOnPlay" color="primary" label="Close launcher after game starts"/><v-btn color="primary" @click="saveSettings">Save settings</v-btn><v-btn class="ml-2" variant="tonal" @click="window.voxel.openPath(settings.gameDirectory)">Open game folder</v-btn><v-btn class="ml-2" variant="tonal" @click="window.voxel.java.install().then(p=>form.javaPath=p)">Install Java 21</v-btn></v-card-text></v-card></section><v-card class="console" rounded="xl"><v-card-text><div class="console-head">Live console</div><div v-for="line in logs.slice(0,14)" :key="line" class="log">{{line}}</div></v-card-text></v-card></div></v-main></v-app>`})
-export{vuetify}
+
+declare global { interface Window { voxel: any } }
+
+export default defineComponent({
+  setup() {
+    const tab = ref('Home')
+    const versions = ref<any[]>([])
+    const instances = ref<any[]>([])
+    const busy = ref(false)
+    const progress = ref(0)
+    const logs = ref<string[]>([])
+    const mods = ref<any[]>([])
+    const query = ref('')
+    const form = ref({ name: 'Survival', version: '', loader: 'Vanilla', memory: 4096, javaPath: '', jvmArgs: '' })
+    const settings = ref<any>({ memory: 4096, jvmArgs: '', closeOnPlay: false, gameDirectory: '' })
+    const nav = ['Home', 'Play', 'Mods', 'Accounts', 'Settings']
+
+    const addLog = (s: string) => logs.value.unshift(`${new Date().toLocaleTimeString()} ${s}`)
+
+    const load = async () => {
+      settings.value = await window.voxel.settings.get()
+      versions.value = await window.voxel.minecraft.versions()
+      instances.value = await window.voxel.instances.list()
+      const j = await window.voxel.java.detect()
+      form.value.javaPath = j[0] ?? ''
+      form.value.version = versions.value.find((v: any) => v.type === 'release')?.id ?? versions.value[0]?.id ?? ''
+      window.voxel.minecraft.onLog((x: string) => x.split(/\r?\n/).filter(Boolean).forEach(addLog))
+    }
+
+    const create = async () => {
+      const id = crypto.randomUUID()
+      const gameDirectory = `${settings.value.gameDirectory}/instances/${id}`
+      const v = { id, ...form.value, gameDirectory }
+      await window.voxel.instances.save(v)
+      instances.value = await window.voxel.instances.list()
+      addLog(`Created ${v.name}`)
+    }
+
+    const install = async () => {
+      busy.value = true; progress.value = 8
+      addLog(`Installing ${form.value.loader} ${form.value.version}`)
+      try {
+        const r = await window.voxel.minecraft.install({ version: form.value.version, loader: form.value.loader, gameDirectory: settings.value.gameDirectory, javaPath: form.value.javaPath })
+        progress.value = 100; addLog(`Installed ${r.version}`)
+      } catch (e: any) { addLog(`Install error: ${e.message}`) }
+      finally { busy.value = false }
+    }
+
+    const play = async (i: any = instances.value[0]) => {
+      if (!i) { tab.value = 'Play'; return }
+      busy.value = true; addLog(`Launching ${i.name}`)
+      try {
+        const r = await window.voxel.minecraft.launch({ version: i.version, gameDirectory: i.gameDirectory, javaPath: i.javaPath || form.value.javaPath, username: 'VoxelPlayer', memory: i.memory, jvmArgs: i.jvmArgs })
+        addLog(`Minecraft started, PID ${r.pid}`)
+      } catch (e: any) { addLog(`Launch error: ${e.message}`) }
+      finally { busy.value = false }
+    }
+
+    const searchMods = async () => {
+      mods.value = await window.voxel.mods.search(query.value, form.value.version, form.value.loader)
+      addLog(`Found ${mods.value.length} Modrinth projects`)
+    }
+
+    const installMod = async (m: any) => {
+      try {
+        const r = await window.voxel.mods.install(m.id, instances.value[0]?.gameDirectory || settings.value.gameDirectory, form.value.version, form.value.loader)
+        addLog(`Installed ${r.filename}`)
+      } catch (e: any) { addLog(`Mod install error: ${e.message}`) }
+    }
+
+    const saveSettings = async () => {
+      await window.voxel.settings.set('memory', settings.value.memory)
+      await window.voxel.settings.set('jvmArgs', settings.value.jvmArgs)
+      await window.voxel.settings.set('closeOnPlay', settings.value.closeOnPlay)
+      addLog('Settings saved')
+    }
+
+    onMounted(load)
+    return { tab, nav, versions, instances, busy, progress, logs, mods, query, form, settings, create, install, play, searchMods, installMod, saveSettings }
+  },
+  template: `<v-app><v-toolbar density="compact" color="transparent" class="titlebar"><v-toolbar-title>◆ VoxelLauncher</v-toolbar-title><v-spacer/><v-btn icon="mdi-minus" @click="window.voxel.window.minimize()"/><v-btn icon="mdi-checkbox-blank-outline" @click="window.voxel.window.maximize()"/><v-btn icon="mdi-close" @click="window.voxel.window.close()"/></v-toolbar><v-navigation-drawer permanent width="220" color="#0d0d12"><div class="brand">VOXEL<span>LAUNCHER</span></div><v-list nav><v-list-item v-for="item in nav" :key="item" :active="tab===item" @click="tab=item" rounded="lg"><template #prepend><v-icon :icon="item==='Home'?'mdi-home':item==='Play'?'mdi-gamepad-variant':item==='Mods'?'mdi-puzzle':item==='Accounts'?'mdi-account-multiple':'mdi-cog'"/></template><v-list-item-title>{{item}}</v-list-item-title></v-list-item></v-list></v-navigation-drawer><v-main class="main"><div class="orb orb-a"/><div class="orb orb-b"/><div class="content"><section v-if="tab==='Home'"><h1>Welcome back.</h1><p class="muted">Minecraft Java Edition, managed from one place.</p><v-card class="hero" rounded="xl"><v-card-text><div class="hero-title">Ready to play?</div><div class="hero-sub">{{instances.length}} instance(s) available.</div><v-btn color="primary" size="large" :loading="busy" @click="play()">Play Minecraft</v-btn></v-card-text></v-card><v-card rounded="xl"><v-card-text><h2>Instances</h2><div class="grid"><div v-for="i in instances" :key="i.id" class="instance"><div><strong>{{i.name}}</strong><div class="muted">{{i.version}} · {{i.loader}} · {{Math.round(i.memory/1024)}} GB</div></div><v-btn icon="mdi-play" variant="tonal" @click="play(i)"/></div></div></v-card-text></v-card></section><section v-else-if="tab==='Play'"><h1>Instances</h1><v-card rounded="xl"><v-card-text><div class="grid two"><v-text-field v-model="form.name" label="Instance name"/><v-select v-model="form.loader" :items="['Vanilla','Fabric','Forge','NeoForge','Quilt']" label="Loader"/><v-select v-model="form.version" :items="versions.filter(v=>v.type==='release').map(v=>v.id)" label="Minecraft version"/><v-text-field v-model.number="form.memory" type="number" label="Memory (MB)"/><v-text-field v-model="form.javaPath" label="Java executable"/><v-text-field v-model="form.jvmArgs" label="JVM arguments"/></div><v-btn color="primary" @click="create">Create instance</v-btn><v-btn class="ml-2" variant="tonal" :loading="busy" @click="install">Install selected version</v-btn><v-progress-linear v-if="busy" :model-value="progress" class="mt-4" rounded/></v-card-text></v-card></section><section v-else-if="tab==='Mods'"><h1>Mods</h1><v-card rounded="xl"><v-card-text><div class="grid two"><v-text-field v-model="query" label="Search Modrinth" @keyup.enter="searchMods"/><v-btn color="primary" @click="searchMods">Search</v-btn></div><div class="grid"><div v-for="m in mods" :key="m.id" class="instance"><div><strong>{{m.title}}</strong><div class="muted">{{m.downloads.toLocaleString()}} downloads · {{m.description}}</div></div><v-btn variant="tonal" @click="installMod(m)">Install</v-btn></div></div></v-card-text></v-card></section><section v-else-if="tab==='Accounts'"><h1>Accounts</h1><v-card rounded="xl"><v-card-text><h2>Offline profile</h2><p class="muted">VoxelPlayer is available immediately for offline/local testing. Online Microsoft credentials stay out of the renderer and can be added through the secure auth layer later.</p><v-chip color="primary">VoxelPlayer</v-chip></v-card-text></v-card></section><section v-else><h1>Settings</h1><v-card rounded="xl"><v-card-text><v-text-field v-model.number="settings.memory" type="number" label="Default memory (MB)"/><v-text-field v-model="settings.jvmArgs" label="Default JVM arguments"/><v-switch v-model="settings.closeOnPlay" color="primary" label="Close launcher after game starts"/><v-btn color="primary" @click="saveSettings">Save settings</v-btn><v-btn class="ml-2" variant="tonal" @click="window.voxel.openPath(settings.gameDirectory)">Open game folder</v-btn><v-btn class="ml-2" variant="tonal" @click="window.voxel.java.install().then((p:string)=>form.javaPath=p)">Install Java 21</v-btn></v-card-text></v-card></section><v-card class="console" rounded="xl"><v-card-text><div class="console-head">Live console</div><div v-for="line in logs.slice(0,14)" :key="line" class="log">{{line}}</div></v-card-text></v-card></div></v-main></v-app>`
+})
+</script>
