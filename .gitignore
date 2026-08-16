@@ -1,0 +1,7 @@
+node_modules/
+dist/
+dist-electron/
+builder-effective-config.yaml
+*.log
+native/publish/
+*.code-workspace

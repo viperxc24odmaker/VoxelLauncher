@@ -1,0 +1,64 @@
+{
+  "name": "voxel-launcher",
+  "version": "1.0.0",
+  "private": true,
+  "description": "VoxelLauncher - a full-featured Minecraft Java Edition launcher.",
+  "main": "dist-electron/main.js",
+  "author": "viperxc24odmaker",
+  "license": "MIT",
+  "packageManager": "pnpm@10.15.0",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "vite",
+    "build": "pnpm typecheck && pnpm build:renderer && pnpm build:electron",
+    "build:renderer": "vite build",
+    "build:electron": "tsc -p tsconfig.electron.json",
+    "typecheck": "vue-tsc -p tsconfig.json --noEmit && tsc -p tsconfig.electron.json --noEmit",
+    "dist": "pnpm build && electron-builder --win nsis",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@mdi/font": "^7.4.47",
+    "@xmcl/core": "^2.16.0",
+    "@xmcl/curseforge": "latest",
+    "@xmcl/game-data": "latest",
+    "@xmcl/instance": "latest",
+    "@xmcl/installer": "^6.3.1",
+    "@xmcl/modrinth": "latest",
+    "@xmcl/nbt": "latest",
+    "@xmcl/resource": "latest",
+    "@xmcl/resourcepack": "latest",
+    "@xmcl/user": "latest",
+    "electron-store": "^10.1.0",
+    "skinview3d": "^3.4.1",
+    "three": "^0.179.1",
+    "vanta": "^0.5.24",
+    "vue": "^3.5.18",
+    "vuetify": "^3.8.11"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.1",
+    "electron": "^37.3.1",
+    "electron-builder": "^26.0.12",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.3",
+    "vue-tsc": "^3.0.6"
+  },
+  "build": {
+    "appId": "com.v24.voxellauncher",
+    "productName": "VoxelLauncher",
+    "asar": true,
+    "files": ["dist/**", "dist-electron/**", "package.json"],
+    "extraResources": [{ "from": "native", "to": "native" }],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "deleteAppDataOnUninstall": false
+    },
+    "artifactName": "VoxelLauncher-${version}-${arch}.exe"
+  }
+}
