@@ -11,6 +11,7 @@
   "engines": { "node": ">=22" },
   "scripts": {
     "dev": "vite",
+    "typecheck": "vue-tsc --noEmit && tsc -p tsconfig.electron.json --noEmit",
     "build": "pnpm typecheck && pnpm build:renderer && pnpm build:electron",
     "build:renderer": "vite build",
     "build:electron": "tsc -p tsconfig.electron.json",
