@@ -1,1 +1,15 @@
-{"compilerOptions":{"target":"ES2022","module":"NodeNext","moduleResolution":"NodeNext","strict":true,"esModuleInterop":true,"verbatimModuleSyntax":true,"resolveJsonModule":true,"skipLibCheck":true,"outDir":"dist-electron","types":["node","electron"]},"include":["electron/**/*.ts"]}
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "strict": true,
+    "esModuleInterop": true,
+    "verbatimModuleSyntax": false,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "outDir": "dist-electron",
+    "types": ["node", "electron"]
+  },
+  "include": ["electron/**/*.ts"]
+}
