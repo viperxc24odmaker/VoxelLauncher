@@ -8,16 +8,14 @@
   "author": "viperxc24odmaker",
   "license": "MIT",
   "packageManager": "pnpm@10.15.0",
-  "engines": {
-    "node": ">=22"
-  },
+  "engines": { "node": ">=22" },
   "scripts": {
     "dev": "vite",
     "typecheck": "vue-tsc --noEmit && tsc -p tsconfig.electron.json --noEmit",
     "build": "pnpm typecheck && pnpm build:renderer && pnpm build:electron",
     "build:renderer": "vite build",
     "build:electron": "tsc -p tsconfig.electron.json",
-    "dist": "pnpm build && electron-builder --win nsis",
+    "dist": "pnpm build && electron-builder --win nsis --publish never",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -44,33 +42,10 @@
     "appId": "com.v24.voxellauncher",
     "productName": "VoxelLauncher",
     "asar": true,
-    "files": [
-      "dist/**",
-      "dist-electron/**",
-      "package.json"
-    ],
-    "extraResources": [
-      {
-        "from": "native",
-        "to": "native"
-      }
-    ],
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
-      ]
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "perMachine": false,
-      "deleteAppDataOnUninstall": false
-    },
+    "files": ["dist/**", "dist-electron/**", "package.json"],
+    "extraResources": [{ "from": "native", "to": "native" }],
+    "win": { "target": [{ "target": "nsis", "arch": ["x64"] }] },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "perMachine": false, "deleteAppDataOnUninstall": false },
     "artifactName": "VoxelLauncher-${version}-${arch}.exe"
   }
 }
